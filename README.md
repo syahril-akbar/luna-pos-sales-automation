@@ -11,7 +11,7 @@ Semua data dari berbagai outlet (Hertasning, Perintis, Malang) akan digabungkan 
 ## ⚠️ Logika Bisnis & Filter Data
 
 Script ini bertindak tidak hanya sebagai format file, melainkan memiliki validasi data yang tegas:
-1. **Urutan Fixed:** Output selalu diurutkan dari `Bubur 9+ 100ml` hingga `Bubur 11+ Isi 3Cup @80ml` sesuai aturan matriks KUNUKU BABY FOOD, bukan berdasarkan produk paling laku.
+1. **Urutan Top 20 Terlaris:** Output akan diurutkan secara otomatis dari Kategori dengan total penjualan (Qty) terbanyak ke yang paling sedikit. Laporan ini akan membatasi dan hanya menampilkan **20 Kategori Terbaik (Top 20)**.
 2. **Filter Profit (Rugi / 0% Dibuang):** Semua barang dengan Gross Profit `<= 0` (Nol atau Minus/Rugi) akan **diabaikan** secara otomatis dan tidak masuk ke dalam perhitungan total.
 3. **Pengecualian MAINAN:** Produk dengan keyword "MAINAN" diabaikan.
 4. **Agregasi Kategori:** Semua barang di luar 23 kategori yang sudah ditetapkan akan dibuang (contoh: barang lain-lain yang bukan fokus menu bayi/balita KUNUKU BABY FOOD).

@@ -141,7 +141,7 @@ def load_data(filepath: str) -> list[dict]:
 def _aggregate_records(records: list[dict]) -> list[dict]:
     """
     Gabungkan penjualan berdasarkan Kategori.
-    Sesuai urutan kategori di CATEGORY_RULES.
+    Lalu urutkan berdasarkan Qty terbanyak (Top 20).
     """
     from collections import defaultdict
 
@@ -149,16 +149,8 @@ def _aggregate_records(records: list[dict]) -> list[dict]:
     for r in records:
         groups[r["Kategori"]].append(r)
 
-    # Use the order from CATEGORY_RULES
-    category_order = [label for label, _ in CATEGORY_RULES]
-
     aggregated = []
-    for cat in category_order:
-        if cat not in groups:
-            continue
-            
-        rows = groups[cat]
-        
+    for cat, rows in groups.items():
         total_qty   = sum(r["Qty"] for r in rows)
         total_gp    = sum(r["Gross Profit"] for r in rows)
         total_hj    = sum(r["Harga Jual Setelah Diskon"] for r in rows)
@@ -174,7 +166,11 @@ def _aggregate_records(records: list[dict]) -> list[dict]:
             "Gross Profit %"          : gp_pct_agg,
         })
 
-    return aggregated
+    # Urutkan berdasarkan Qty Terjual terbanyak ke paling sedikit
+    aggregated.sort(key=lambda x: x["Qty"], reverse=True)
+
+    # Ambil Top 20
+    return aggregated[:20]
 
 
 
@@ -340,11 +336,27 @@ def _write_sheet_content(ws, records: list[dict], title: str):
 # ─────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="Generate Ringkasan Penjualan KUNUKU BABY FOOD per Kategori")
-    parser.add_argument("input_file", help="Path file Excel sumber dari Luna POS")
+    parser.add_argument("input_file", nargs="?", help="Path file Excel sumber dari Luna POS", default=None)
     parser.add_argument("-o", "--output", help="Path file output (opsional)", default="")
     args = parser.parse_args()
 
     source_file = args.input_file
+
+    if not source_file:
+        print("="*60)
+        print("  PROGRAM RINGKASAN PENJUALAN KUNUKU BABY FOOD")
+        print("="*60)
+        source_file = input("Silakan masukkan path file Excel (bisa drag & drop ke sini): ").strip()
+        
+        # Bersihkan tanda kutip jika user drag & drop file di terminal
+        if source_file.startswith('"') and source_file.endswith('"'):
+            source_file = source_file[1:-1]
+        elif source_file.startswith("'") and source_file.endswith("'"):
+            source_file = source_file[1:-1]
+
+    if not source_file:
+        print("[ERROR] Path file tidak boleh kosong!")
+        sys.exit(1)
 
     if not os.path.exists(source_file):
         print(f"[ERROR] File tidak ditemukan: {source_file}")
