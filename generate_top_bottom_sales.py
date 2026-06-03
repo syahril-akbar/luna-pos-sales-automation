@@ -224,18 +224,23 @@ def _copy_source_sheet(source_file: str, ws_dest):
     wb_src = openpyxl.load_workbook(source_file, data_only=True)
     ws_src = wb_src.active
 
-    # Salin dimensi kolom
-    for col_letter, col_dim in ws_src.column_dimensions.items():
-        ws_dest.column_dimensions[col_letter].width = col_dim.width
-
     # Salin lebar baris
     for row_idx, row_dim in ws_src.row_dimensions.items():
         ws_dest.row_dimensions[row_idx].height = row_dim.height
 
-    # Salin nilai sel
+    # Salin nilai sel + hitung panjang teks terpanjang per kolom
+    col_max_len: dict[int, int] = {}
     for row in ws_src.iter_rows():
         for cell in row:
             ws_dest.cell(row=cell.row, column=cell.column, value=cell.value)
+            cell_len = len(str(cell.value)) if cell.value is not None else 0
+            if cell_len > col_max_len.get(cell.column, 0):
+                col_max_len[cell.column] = cell_len
+
+    # Set lebar kolom otomatis berdasarkan teks terpanjang (min 8, max 60)
+    for col_idx, max_len in col_max_len.items():
+        adjusted = min(max(max_len + 2, 8), 60)
+        ws_dest.column_dimensions[get_column_letter(col_idx)].width = adjusted
 
     # Gaya header baris pertama
     accent = "1A56DB"
