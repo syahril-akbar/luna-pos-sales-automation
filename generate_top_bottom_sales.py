@@ -36,14 +36,12 @@ CATEGORY_RULES = [
                                                and "YAKINIKU" not in n))),
     ("Finger Food",             lambda n: "FINGER FOOD" in n),
     ("Kaldu BB Booster",        lambda n: "KALDU" in n),
-    ("Abon",                    lambda n: "ABON" in n),
+    ("Abon 25ml",               lambda n: "ABON" in n and "25ML" in n),
+    ("Abon 10ml",               lambda n: "ABON" in n and "25ML" not in n),
     ("Rice Box",                lambda n: "RICE BOX" in n),
     ("Pasta",                   lambda n: "PASTA" in n),
     ("Kremes",                  lambda n: "KREMES" in n),
     ("Ghee BB Booster",         lambda n: "GHEE" in n),
-    ("Bubur 6+ Meal Box",       lambda n: "BUBUR" in n and "6+"  in n and "MEAL BOX" in n),
-    ("Bubur 9+ Meal Box",       lambda n: "BUBUR" in n and "9+"  in n and "MEAL BOX" in n),
-    ("Bubur 11+ Meal Box",      lambda n: "BUBUR" in n and "11+" in n and "MEAL BOX" in n),
     ("Bubur 6+ Isi 3Cup @80ml", lambda n: "BUBUR" in n and "6+"  in n and "80" in n),
     ("Bubur 9+ Isi 3Cup @80ml", lambda n: "BUBUR" in n and "9+"  in n and "80" in n),
     ("Bubur 11+ Isi 3Cup @80ml",lambda n: "BUBUR" in n and "11+" in n and "80" in n),
@@ -335,7 +333,7 @@ def _write_sheet_content(ws, records: list[dict], title: str):
 # 4. Main script
 # ─────────────────────────────────────────────
 def main():
-    parser = argparse.ArgumentParser(description="Generate Ringkasan Penjualan KUNUKU BABY FOOD per Kategori")
+    parser = argparse.ArgumentParser(description="Generate Ringkasan Penjualan KUNUKU BABY FOOD per Kategori (21 Kategori)")
     parser.add_argument("input_file", nargs="?", help="Path file Excel sumber dari Luna POS", default=None)
     parser.add_argument("-o", "--output", help="Path file output (opsional)", default="")
     args = parser.parse_args()

@@ -4,7 +4,7 @@ Script otomatisasi untuk merekap dan mengagregasi data penjualan produk mentah d
 
 ## 📌 Deskripsi
 
-Program ini mengubah laporan penjualan bulanan dari format per-produk menjadi rekapitulasi **berdasarkan 23 Kategori Produk Utama**. 
+Program ini mengubah laporan penjualan bulanan dari format per-produk menjadi rekapitulasi **berdasarkan 21 Kategori Produk Utama**. 
 
 Semua data dari berbagai outlet (Hertasning, Perintis, Malang) akan digabungkan secara otomatis ke dalam satu sheet, menghilangkan rincian nama produk, dan menampilkan performa metrik inti seperti Total Qty, Diskon, Harga Jual Bersih, dan Gross Profit.
 
@@ -14,7 +14,7 @@ Script ini bertindak tidak hanya sebagai format file, melainkan memiliki validas
 1. **Urutan Top 20 Terlaris:** Output akan diurutkan secara otomatis dari Kategori dengan total penjualan (Qty) terbanyak ke yang paling sedikit. Laporan ini akan membatasi dan hanya menampilkan **20 Kategori Terbaik (Top 20)**.
 2. **Filter Profit (Rugi / 0% Dibuang):** Semua barang dengan Gross Profit `<= 0` (Nol atau Minus/Rugi) akan **diabaikan** secara otomatis dan tidak masuk ke dalam perhitungan total.
 3. **Pengecualian MAINAN:** Produk dengan keyword "MAINAN" diabaikan.
-4. **Agregasi Kategori:** Semua barang di luar 23 kategori yang sudah ditetapkan akan dibuang (contoh: barang lain-lain yang bukan fokus menu bayi/balita KUNUKU BABY FOOD).
+4. **Agregasi Kategori:** Semua barang di luar 21 kategori yang sudah ditetapkan akan dibuang (contoh: barang lain-lain yang bukan fokus menu bayi/balita KUNUKU BABY FOOD).
 
 ## 🚀 Cara Penggunaan
 
@@ -45,7 +45,7 @@ Script akan otomatis membuat file baru di lokasi *working directory* yang sama d
 Contoh output file:
 `KATEGORI_Ringkasan Penjualan Produk 01 April - 30 April 2026.xlsx`
 
-## 🛠 Struktur Kategori (23 List Utama)
+## 🛠 Struktur Kategori (21 List Utama)
 Berikut urutan yang akan dihasilkan pada tabel akhir:
 1. Bubur 9+ 100ml
 2. Bubur 6+ 200ml
@@ -59,14 +59,12 @@ Berikut urutan yang akan dihasilkan pada tabel akhir:
 10. Rice BB Booster
 11. Finger Food
 12. Kaldu BB Booster
-13. Abon
-14. Rice Box
-15. Pasta
-16. Kremes
-17. Ghee BB Booster
-18. Bubur 6+ Meal Box
-19. Bubur 9+ Meal Box
-20. Bubur 11+ Meal Box
-21. Bubur 6+ Isi 3Cup @80ml
-22. Bubur 9+ Isi 3Cup @80ml
-23. Bubur 11+ Isi 3Cup @80ml
+13. Abon 25ml
+14. Abon 10ml
+15. Rice Box
+16. Pasta
+17. Kremes
+18. Ghee BB Booster
+19. Bubur 6+ Isi 3Cup @80ml
+20. Bubur 9+ Isi 3Cup @80ml
+21. Bubur 11+ Isi 3Cup @80ml
