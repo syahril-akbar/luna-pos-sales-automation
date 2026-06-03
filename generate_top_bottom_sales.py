@@ -202,7 +202,7 @@ FMT_PCT   = '0.00"%"'
 # ─────────────────────────────────────────────
 # 3. Build Excel output
 # ─────────────────────────────────────────────
-def build_excel(records: list[dict], title: str, output_path: str):
+def build_excel(records: list[dict], title: str, output_path: str, source_file: str = ""):
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # hapus default sheet
 
@@ -210,8 +210,48 @@ def build_excel(records: list[dict], title: str, output_path: str):
     ws = wb.create_sheet("Ringkasan Gabungan")
     _write_sheet_content(ws, records, title)
 
+    # ── Sheet 2: Data Mentah (salinan sumber) ─
+    if source_file and os.path.exists(source_file):
+        ws_raw = wb.create_sheet("Data Mentah")
+        _copy_source_sheet(source_file, ws_raw)
+
     wb.save(output_path)
     print(f"[OK]  Saved: {output_path}")
+
+
+def _copy_source_sheet(source_file: str, ws_dest):
+    """Salin seluruh isi sheet aktif dari file sumber ke ws_dest."""
+    wb_src = openpyxl.load_workbook(source_file, data_only=True)
+    ws_src = wb_src.active
+
+    # Salin dimensi kolom
+    for col_letter, col_dim in ws_src.column_dimensions.items():
+        ws_dest.column_dimensions[col_letter].width = col_dim.width
+
+    # Salin lebar baris
+    for row_idx, row_dim in ws_src.row_dimensions.items():
+        ws_dest.row_dimensions[row_idx].height = row_dim.height
+
+    # Salin nilai sel
+    for row in ws_src.iter_rows():
+        for cell in row:
+            ws_dest.cell(row=cell.row, column=cell.column, value=cell.value)
+
+    # Gaya header baris pertama
+    accent = "1A56DB"
+    header_font_color = "FFFFFF"
+    for cell in ws_dest[1]:
+        if cell.value is not None:
+            cell.font = Font(name="Calibri", bold=True, size=10, color=header_font_color)
+            cell.fill = PatternFill("solid", fgColor=accent)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = _border()
+
+    # Freeze baris header
+    ws_dest.freeze_panes = "A2"
+
+    wb_src.close()
+    print(f"[OK]  Sheet 'Data Mentah' disalin dari sumber.")
 
 
 def _write_sheet_content(ws, records: list[dict], title: str):
@@ -386,7 +426,7 @@ def main():
         name, ext = os.path.splitext(filename)
         output_file = f"KATEGORI_{name}{ext}"
 
-    build_excel(records, title=title, output_path=output_file)
+    build_excel(records, title=title, output_path=output_file, source_file=source_file)
 
 if __name__ == "__main__":
     main()
