@@ -45,13 +45,53 @@ CATEGORY_RULES = [
     ("Bubur 6+ Isi 3Cup @80ml", lambda n: "BUBUR" in n and "6+"  in n and "80" in n),
     ("Bubur 9+ Isi 3Cup @80ml", lambda n: "BUBUR" in n and "9+"  in n and "80" in n),
     ("Bubur 11+ Isi 3Cup @80ml",lambda n: "BUBUR" in n and "11+" in n and "80" in n),
+    ("Bubur 9+ Meal Box",       lambda n: "BUBUR" in n and "9+"  in n and "MEAL BOX" in n),
+    ("Bubur 11+ Meal Box",      lambda n: "BUBUR" in n and "11+" in n and "MEAL BOX" in n),
+]
+
+# ─────────────────────────────────────────────
+# Kategori V2: 23 Kategori Lengkap
+# Perbedaan dari V1:
+#   - Abon digabung (tanpa split 25ml/10ml)
+#   - Bubur 6+ Meal Box ditambahkan
+#   - Urutan: Meal Box sebelum Isi 3Cup @80ml
+# ─────────────────────────────────────────────
+CATEGORY_RULES_V2 = [
+    ("Bubur 9+ 100ml",          lambda n: "BUBUR" in n and "9+"  in n and "100" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
+    ("Bubur 6+ 200ml",          lambda n: "BUBUR" in n and "6+"  in n and "200" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
+    ("Sup",                     lambda n: "SUP " in n or n.startswith("SUP")),
+    ("Bubur 6+ 100ml",          lambda n: "BUBUR" in n and "6+"  in n and "100" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
+    ("Bubur 9+ 200ml",          lambda n: "BUBUR" in n and "9+"  in n and "200" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
+    ("Bubur 11+ 100ml",         lambda n: "BUBUR" in n and "11+" in n and "100" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
+    ("Bubur 11+ 200ml",         lambda n: "BUBUR" in n and "11+" in n and "200" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
+    ("Lauk",                    lambda n: "LAUK" in n),
+    ("Snack Buah",              lambda n: "SNACK BUAH" in n),
+    ("Rice BB Booster",         lambda n: ("BUTTER RICE" in n or "SEAWEED BUTTER RICE" in n
+                                           or ("RICE" in n and "BUBUR" not in n
+                                               and "RICE BOX" not in n
+                                               and "YAKINIKU" not in n))),
+    ("Finger Food",             lambda n: "FINGER FOOD" in n),
+    ("Kaldu BB Booster",        lambda n: "KALDU" in n),
+    ("Abon",                    lambda n: "ABON" in n),
+    ("Rice Box",                lambda n: "RICE BOX" in n),
+    ("Pasta",                   lambda n: "PASTA" in n),
+    ("Kremes",                  lambda n: "KREMES" in n),
+    ("Ghee BB Booster",         lambda n: "GHEE" in n),
+    ("Bubur 6+ Meal Box",       lambda n: "BUBUR" in n and "6+"  in n and "MEAL BOX" in n),
+    ("Bubur 9+ Meal Box",       lambda n: "BUBUR" in n and "9+"  in n and "MEAL BOX" in n),
+    ("Bubur 11+ Meal Box",      lambda n: "BUBUR" in n and "11+" in n and "MEAL BOX" in n),
+    ("Bubur 6+ Isi 3Cup @80ml", lambda n: "BUBUR" in n and "6+"  in n and "80" in n),
+    ("Bubur 9+ Isi 3Cup @80ml", lambda n: "BUBUR" in n and "9+"  in n and "80" in n),
+    ("Bubur 11+ Isi 3Cup @80ml",lambda n: "BUBUR" in n and "11+" in n and "80" in n),
 ]
 
 
-def get_category(product_name: str) -> str:
+def get_category(product_name: str, rules: list = None) -> str:
     """Return label kategori jika produk cocok, atau None jika tidak ada yang cocok."""
+    if rules is None:
+        rules = CATEGORY_RULES
     n = product_name.upper()
-    for label, fn in CATEGORY_RULES:
+    for label, fn in rules:
         if fn(n):
             return label
     return None
@@ -59,7 +99,7 @@ def get_category(product_name: str) -> str:
 # ─────────────────────────────────────────────
 # 1. Baca data dari source file
 # ─────────────────────────────────────────────
-def load_data(filepath: str) -> list[dict]:
+def load_data(filepath: str, rules: list = None, limit: int = 20) -> list[dict]:
     """Baca semua baris produk dari source Excel, abaikan header & section rows."""
     wb = openpyxl.load_workbook(filepath, data_only=True)
     ws = wb.active
@@ -116,7 +156,7 @@ def load_data(filepath: str) -> list[dict]:
             continue
 
         # Skip produk yang tidak masuk kategori yang diizinkan
-        kategori = get_category(nama_upper)
+        kategori = get_category(nama_upper, rules)
         if kategori is None:
             continue
 
@@ -134,12 +174,14 @@ def load_data(filepath: str) -> list[dict]:
             "Metode Pembayaran"       : str(metode).strip() if metode else "",
         })
 
-    return _aggregate_records(records)
+    return _aggregate_records(records, limit=limit)
 
-def _aggregate_records(records: list[dict]) -> list[dict]:
+def _aggregate_records(records: list[dict], limit: int = 20) -> list[dict]:
     """
     Gabungkan penjualan berdasarkan Kategori.
-    Lalu urutkan berdasarkan Qty terbanyak (Top 20).
+    Lalu urutkan berdasarkan Qty terbanyak.
+    limit=20  -> Top 20 (default, untuk sheet Ringkasan Gabungan)
+    limit=0   -> Semua kategori tanpa batas (untuk sheet Ringkasan per Kategori)
     """
     from collections import defaultdict
 
@@ -167,8 +209,8 @@ def _aggregate_records(records: list[dict]) -> list[dict]:
     # Urutkan berdasarkan Qty Terjual terbanyak ke paling sedikit
     aggregated.sort(key=lambda x: x["Qty"], reverse=True)
 
-    # Ambil Top 20
-    return aggregated[:20]
+    # Batasi hasil jika limit > 0
+    return aggregated[:limit] if limit > 0 else aggregated
 
 
 
@@ -202,15 +244,29 @@ FMT_PCT   = '0.00"%"'
 # ─────────────────────────────────────────────
 # 3. Build Excel output
 # ─────────────────────────────────────────────
-def build_excel(records: list[dict], title: str, output_path: str, source_file: str = ""):
+def build_excel(
+    records: list[dict],
+    records_v2: list[dict],
+    title: str,
+    output_path: str,
+    source_file: str = "",
+):
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # hapus default sheet
 
-    # ── Sheet 1: Semua Outlet Gabungan ───────
-    ws = wb.create_sheet("Ringkasan Gabungan")
-    _write_sheet_content(ws, records, title)
+    # ── Sheet 1: Top 20 (V1 rules) ──────────
+    ws = wb.create_sheet("Top 20 Terlaris")
+    _write_sheet_content(ws, records, title, subtitle="Top 20 Kategori Terlaris — Semua Outlet")
 
-    # ── Sheet 2: Data Mentah (salinan sumber) ─
+    # ── Sheet 2: 23 Kategori Lengkap (V2) ───
+    ws2 = wb.create_sheet("23 Kategori Lengkap")
+    _write_sheet_content(
+        ws2, records_v2, title,
+        subtitle="23 Kategori Lengkap — Semua Outlet",
+        accent="0E7C7B",   # teal untuk membedakan visual
+    )
+
+    # ── Sheet 3: Data Mentah (salinan sumber) ─
     if source_file and os.path.exists(source_file):
         ws_raw = wb.create_sheet("Data Mentah")
         _copy_source_sheet(source_file, ws_raw)
@@ -259,10 +315,16 @@ def _copy_source_sheet(source_file: str, ws_dest):
     print(f"[OK]  Sheet 'Data Mentah' disalin dari sumber.")
 
 
-def _write_sheet_content(ws, records: list[dict], title: str):
-    accent       = "1A56DB"   # biru
-    accent_light = "EBF5FF"
-    accent_alt   = "DBEAFE"
+def _write_sheet_content(
+    ws,
+    records: list[dict],
+    title: str,
+    subtitle: str = "Ringkasan Penjualan per Kategori — Semua Outlet",
+    accent: str = "1A56DB",
+):
+    # Warna turunan dari accent
+    accent_light      = "EBF5FF" if accent == "1A56DB" else "E6F4F4"
+    accent_alt        = "DBEAFE" if accent == "1A56DB" else "CCECEC"
     header_font_color = "FFFFFF"
 
     # ── Baris judul ─────────────────────────
@@ -276,7 +338,7 @@ def _write_sheet_content(ws, records: list[dict], title: str):
     # ── Baris subtitle ───────────────────────
     ws.merge_cells("A2:G2")
     sub_cell = ws["A2"]
-    sub_cell.value = f"Ringkasan Penjualan per Kategori — Semua Outlet"
+    sub_cell.value = subtitle
     sub_cell.font  = Font(name="Calibri", bold=True, size=11, color="374151")
     sub_cell.fill  = _header_fill("F3F4F6")
     sub_cell.alignment = _center()
@@ -378,7 +440,7 @@ def _write_sheet_content(ws, records: list[dict], title: str):
 # 4. Main script
 # ─────────────────────────────────────────────
 def main():
-    parser = argparse.ArgumentParser(description="Generate Ringkasan Penjualan KUNUKU BABY FOOD per Kategori (21 Kategori)")
+    parser = argparse.ArgumentParser(description="Generate Ringkasan Penjualan KUNUKU BABY FOOD per Kategori (23 Kategori)")
     parser.add_argument("input_file", nargs="?", help="Path file Excel sumber dari Luna POS", default=None)
     parser.add_argument("-o", "--output", help="Path file output (opsional)", default="")
     args = parser.parse_args()
@@ -406,12 +468,17 @@ def main():
         sys.exit(1)
 
     print(f"[READ]  Membaca: {source_file} ...")
-    records = load_data(source_file)
+
+    # Load dengan V1 rules (Top 20, Abon split)
+    records = load_data(source_file, rules=CATEGORY_RULES, limit=20)
     if not records:
         print("[WARN]  Tidak ada data yang valid untuk diproses.")
         sys.exit(0)
+    print(f"    Sheet 1 - Top 20 kategori terdeteksi : {len(records)}")
 
-    print(f"    Total kategori terdeteksi: {len(records)}")
+    # Load dengan V2 rules (23 Kategori Lengkap, Abon gabungan, Bubur 6+ Meal Box)
+    records_v2 = load_data(source_file, rules=CATEGORY_RULES_V2, limit=0)
+    print(f"    Sheet 2 - Kategori lengkap terdeteksi: {len(records_v2)}")
 
     # Ekstrak tanggal/periode dari nama file jika memungkinkan
     # Contoh: "Ringkasan Penjualan Produk 01 April - 30 April 2026.xlsx" -> "01 April - 30 April 2026"
@@ -420,7 +487,7 @@ def main():
     match = re.search(r'(\d{1,2}\s+[a-zA-Z]+\s+(?:-\s+\d{1,2}\s+[a-zA-Z]+\s+)?\d{4})', filename)
     if match:
         title_suffix = f" — {match.group(1)}"
-    
+
     title = f"Ringkasan Penjualan per Kategori{title_suffix}"
 
     # Tentukan nama output file
@@ -431,7 +498,13 @@ def main():
         name, ext = os.path.splitext(filename)
         output_file = f"KATEGORI_{name}{ext}"
 
-    build_excel(records, title=title, output_path=output_file, source_file=source_file)
+    build_excel(
+        records,
+        records_v2,
+        title=title,
+        output_path=output_file,
+        source_file=source_file,
+    )
 
 if __name__ == "__main__":
     main()
