@@ -16,6 +16,14 @@ import sys
 import argparse
 import re
 
+# Helper: cocokkan SUP atau SOUP sebagai kata penuh (whole-word)
+# Sehingga 'SUPER', 'KALDU SUPER LEMAK', 'SALMON BUTTERMILK' tidak ikut
+_RE_SUP = re.compile(r'\bSUP\b|\bSOUP\b')
+
+def _is_sup(name_upper: str) -> bool:
+    """Return True jika nama produk (uppercase) mengandung kata SUP atau SOUP."""
+    return bool(_RE_SUP.search(name_upper))
+
 # ─────────────────────────────────────────────
 # Daftar kategori yang diizinkan (urutan = prioritas matching)
 # Setiap entry: (label_kategori, fungsi_pengecekan_nama_produk)
@@ -23,7 +31,7 @@ import re
 CATEGORY_RULES = [
     ("Bubur 9+ 100ml",          lambda n: "BUBUR" in n and "9+"  in n and "100" in n and "ML" in n and "MEAL BOX" not in n),
     ("Bubur 6+ 200ml",          lambda n: "BUBUR" in n and "6+"  in n and "200" in n and "ML" in n and "MEAL BOX" not in n),
-    ("Sup",                     lambda n: "SUP " in n or n.startswith("SUP")),
+    ("Sup",                     lambda n: _is_sup(n)),
     ("Bubur 6+ 100ml",          lambda n: "BUBUR" in n and "6+"  in n and "100" in n and "ML" in n and "MEAL BOX" not in n),
     ("Bubur 9+ 200ml",          lambda n: "BUBUR" in n and "9+"  in n and "200" in n and "ML" in n and "MEAL BOX" not in n),
     ("Bubur 11+ 100ml",         lambda n: "BUBUR" in n and "11+" in n and "100" in n and "ML" in n and "MEAL BOX" not in n),
@@ -59,7 +67,7 @@ CATEGORY_RULES = [
 CATEGORY_RULES_V2 = [
     ("Bubur 9+ 100ml",          lambda n: "BUBUR" in n and "9+"  in n and "100" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
     ("Bubur 6+ 200ml",          lambda n: "BUBUR" in n and "6+"  in n and "200" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
-    ("Sup",                     lambda n: "SUP " in n or n.startswith("SUP")),
+    ("Sup",                     lambda n: _is_sup(n)),
     ("Bubur 6+ 100ml",          lambda n: "BUBUR" in n and "6+"  in n and "100" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
     ("Bubur 9+ 200ml",          lambda n: "BUBUR" in n and "9+"  in n and "200" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
     ("Bubur 11+ 100ml",         lambda n: "BUBUR" in n and "11+" in n and "100" in n and "ML" in n and "MEAL BOX" not in n and "80" not in n),
